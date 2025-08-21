@@ -1,0 +1,108 @@
+{% extends 'layouts.html' %}
+
+{% block title %}Create account • TodoApp{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/register.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="auth-wrapper">
+    <div class="accent accent-1" aria-hidden="true"></div>
+    <div class="accent accent-2" aria-hidden="true"></div>
+
+    <section class="auth-card" aria-label="Create your account">
+        <header class="auth-header">
+            <div class="app-logo" aria-hidden="true">✓</div>
+            <h1>Create your account</h1>
+            <p class="subtitle">It only takes a minute to get started</p>
+        </header>
+
+        <form id="registerForm" class="auth-form">
+            <div class="grid-2">
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input id="email" type="email" name="email" placeholder="you@example.com" required>
+                </div>
+                <div class="field">
+                    <label for="username">Username</label>
+                    <input id="username" type="text" name="username" placeholder="yourusername" required>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="field">
+                    <label for="firstname">First name</label>
+                    <input id="firstname" type="text" name="firstname" placeholder="Jane" required>
+                </div>
+                <div class="field">
+                    <label for="lastname">Last name</label>
+                    <input id="lastname" type="text" name="lastname" placeholder="Doe" required>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="field">
+                    <label for="role">Role</label>
+                    <input id="role" type="text" name="role" placeholder="e.g. user" required>
+                </div>
+                <div class="field">
+                    <label for="phone_number">Phone number</label>
+                    <input id="phone_number" type="tel" name="phone_number" placeholder="(555) 000-0000"
+                        autocomplete="tel" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="address">Address</label>
+                <input id="address" type="text" name="address" placeholder="123 Main St" required>
+            </div>
+
+            <div class="grid-2">
+                <div class="field password-field">
+                    <label for="password">Password</label>
+                    <input id="password" type="password" name="password" placeholder="Create a password"
+                        autocomplete="new-password" required>
+                    <button type="button" class="password-toggle" data-target="password" aria-label="Show password"
+                        title="Show password"></button>
+                </div>
+                <div class="field password-field">
+                    <label for="password2">Confirm password</label>
+                    <input id="password2" type="password" name="password2" placeholder="Re-enter password"
+                        autocomplete="new-password" required>
+                    <button type="button" class="password-toggle" data-target="password2" aria-label="Show password"
+                        title="Show password"></button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create account</button>
+        </form>
+
+        <footer class="auth-footer">
+            <span>Already have an account?</span>
+            <a class="link" href="/auth/login-page">Sign in</a>
+        </footer>
+    </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='css/js/base.js') }}"></script>
+<script>
+    (function () {
+        const toggles = document.querySelectorAll('.password-toggle');
+        toggles.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const targetId = btn.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (!input) return;
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+                btn.setAttribute('title', isHidden ? 'Hide password' : 'Show password');
+                btn.classList.toggle('visible', isHidden);
+            });
+        });
+    })();
+</script>
+{% endblock %}

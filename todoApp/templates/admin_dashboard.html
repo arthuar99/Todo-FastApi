@@ -1,0 +1,160 @@
+{% extends 'layouts.html' %}
+
+{% block title %}Admin Dashboard • TodoApp{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/todo.css') }}">
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar">
+    <div class="navbar-container">
+        <a href="/todos/todo-page" class="navbar-brand">
+            <div class="logo">✓</div>
+            TodoApp
+        </a>
+        <div class="navbar-nav">
+            <a href="/admin/dashboard" class="nav-link active">Admin</a>
+            <a href="/todos/todo-page" class="nav-link">My Todos</a>
+            <a href="/users/profile-page" class="nav-link">Profile</a>
+            <button onclick="logout()" class="btn btn-small btn-secondary">Logout</button>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<main class="todo-wrapper">
+    <div class="accent accent-1" aria-hidden="true"></div>
+    <div class="accent accent-2" aria-hidden="true"></div>
+
+    <div class="todo-container">
+        <header class="todo-header">
+            <div class="header-content">
+                <h1>Admin Dashboard</h1>
+                <p class="subtitle">Overview of users and todos</p>
+            </div>
+        </header>
+
+        <div class="todo-content">
+            <section class="cards-grid">
+                <div class="card">
+                    <div class="card-title">Total Users</div>
+                    <div class="card-value" id="statUsers">-</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Total Todos</div>
+                    <div class="card-value" id="statTodos">-</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Completed</div>
+                    <div class="card-value" id="statCompleted">-</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Pending</div>
+                    <div class="card-value" id="statPending">-</div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <h3>All Todos</h3>
+                </div>
+                <div id="adminTodos" class="todos-list">
+                    <div class="loading">Loading...</div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <h3>All Users</h3>
+                </div>
+                <div id="adminUsers" class="todos-list">
+                    <div class="loading">Loading...</div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='css/js/base.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadStats();
+        loadTodos();
+        loadUsers();
+    });
+
+    async function loadStats() {
+        try {
+            const token = getCookie('access_token');
+            const res = await fetch('/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (!res.ok) return;
+            const s = await res.json();
+            document.getElementById('statUsers').textContent = s.total_users;
+            document.getElementById('statTodos').textContent = s.total_todos;
+            document.getElementById('statCompleted').textContent = s.completed_todos;
+            document.getElementById('statPending').textContent = s.pending_todos;
+        } catch (e) { console.error(e); }
+    }
+
+    async function loadTodos() {
+        try {
+            const token = getCookie('access_token');
+            const res = await fetch('/admin/todo', { headers: { 'Authorization': `Bearer ${token}` } });
+            const todos = res.ok ? await res.json() : [];
+            const container = document.getElementById('adminTodos');
+            if (todos.length === 0) { container.innerHTML = '<div class="empty-state">No todos</div>'; return; }
+            container.innerHTML = todos.map(t => `
+            <div class="todo-item ${t.complete ? 'completed' : ''}" data-id="${t.id}">
+                <div class="todo-content">
+                    <h3 class="todo-title">${t.title}</h3>
+                    <p class="todo-description">${t.description}</p>
+                    <div class="todo-meta">
+                        <span class="priority priority-${t.priority}">Priority ${t.priority}</span>
+                        <span class="status ${t.complete ? 'complete' : 'pending'}">${t.complete ? '✓ Complete' : '○ Pending'}</span>
+                        <span class="owner">Owner #${t.owner_id}</span>
+                    </div>
+                </div>
+                <div class="todo-actions">
+                    <button class="btn btn-small btn-danger" onclick="adminDeleteTodo(${t.id})">Delete</button>
+                </div>
+            </div>
+        `).join('');
+        } catch (e) { console.error(e); }
+    }
+
+    async function adminDeleteTodo(id) {
+        if (!confirm('Delete this todo?')) return;
+        try {
+            const token = getCookie('access_token');
+            const res = await fetch(`/admin/todo/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) { loadTodos(); loadStats(); }
+        } catch (e) { console.error(e); }
+    }
+
+    async function loadUsers() {
+        try {
+            const token = getCookie('access_token');
+            const res = await fetch('/admin/users', { headers: { 'Authorization': `Bearer ${token}` } });
+            const users = res.ok ? await res.json() : [];
+            const container = document.getElementById('adminUsers');
+            if (users.length === 0) { container.innerHTML = '<div class="empty-state">No users</div>'; return; }
+            container.innerHTML = users.map(u => `
+            <div class="todo-item" data-id="${u.id}">
+                <div class="todo-content">
+                    <h3 class="todo-title">${u.username} <small>(#${u.id})</small></h3>
+                    <p class="todo-description">${u.email}</p>
+                    <div class="todo-meta">
+                        <span class="status">Role: ${u.role}</span>
+                        <span class="status">Active: ${u.is_active}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        } catch (e) { console.error(e); }
+    }
+</script>
+{% endblock %}

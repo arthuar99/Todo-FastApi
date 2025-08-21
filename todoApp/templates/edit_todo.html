@@ -1,0 +1,151 @@
+{% extends 'layouts.html' %}
+
+{% block title %}Edit Todo • TodoApp{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/todo.css') }}">
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar">
+    <div class="navbar-container">
+        <a href="/todos/todo-page" class="navbar-brand">
+            <div class="logo">✓</div>
+            TodoApp
+        </a>
+        <div class="navbar-nav">
+            <a href="/todos/todo-page" class="nav-link">My Todos</a>
+            <a href="/users/profile-page" class="nav-link">Profile</a>
+            <button onclick="logout()" class="btn btn-small btn-secondary">Logout</button>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<main class="todo-wrapper">
+    <div class="accent accent-1" aria-hidden="true"></div>
+    <div class="accent accent-2" aria-hidden="true"></div>
+
+    <div class="todo-container">
+        <header class="todo-header">
+            <div class="header-content">
+                <h1>Edit Todo</h1>
+                <p class="subtitle">Update your task details</p>
+            </div>
+            <a href="/todos/todo-page" class="btn btn-secondary">← Back to Todos</a>
+        </header>
+
+        <div class="todo-content">
+            <div class="todo-form">
+                <form id="editTodoForm">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="title">Title</label>
+                            <input id="title" type="text" name="title" placeholder="Enter todo title" required>
+                        </div>
+                        <div class="field">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description" placeholder="Enter description"
+                                required></textarea>
+                        </div>
+                        <div class="field">
+                            <label for="priority">Priority</label>
+                            <select id="priority" name="priority" required>
+                                <option value="">Select priority</option>
+                                <option value="1">Low</option>
+                                <option value="2">Medium</option>
+                                <option value="3">High</option>
+                                <option value="4">Urgent</option>
+                                <option value="5">Critical</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="complete" name="complete">
+                                <span class="checkmark"></span>
+                                Mark as complete
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-danger" onclick="deleteTodo()">Delete Todo</button>
+                        <button type="submit" class="btn btn-primary">Update Todo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='css/js/base.js') }}"></script>
+<script>
+    const todoId = {{ todo_id }};
+
+    // Load todo data on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        loadTodoData();
+    });
+
+    async function loadTodoData() {
+        try {
+            const token = getCookie('access_token');
+            if (!token) {
+                window.location.href = '/auth/login-page';
+                return;
+            }
+
+            const response = await fetch(`/todos/todo/${todoId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const todo = await response.json();
+                populateForm(todo);
+            } else {
+                alert('Failed to load todo data');
+                window.location.href = '/todos/todo-page';
+            }
+        } catch (error) {
+            console.error('Error loading todo:', error);
+            alert('Error loading todo data');
+        }
+    }
+
+    function populateForm(todo) {
+        document.getElementById('title').value = todo.title;
+        document.getElementById('description').value = todo.description;
+        document.getElementById('priority').value = todo.priority;
+        document.getElementById('complete').checked = todo.complete;
+    }
+
+    async function deleteTodo() {
+        if (!confirm('Are you sure you want to delete this todo?')) {
+            return;
+        }
+
+        try {
+            const token = getCookie('access_token');
+            const response = await fetch(`/todos/todo/${todoId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                window.location.href = '/todos/todo-page';
+            } else {
+                alert('Failed to delete todo');
+            }
+        } catch (error) {
+            console.error('Error deleting todo:', error);
+            alert('Error deleting todo');
+        }
+    }
+</script>
+{% endblock %}

@@ -1,19 +1,28 @@
-from typing import Annotated
-from fastapi import FastAPI , Depends , HTTPException ,Path
-from sqlalchemy.orm import Session
-from pydantic import BaseModel , Field
-import models
-from models import Todos
-from database import engine , SessionLocal
-from starlette import status
-from routers import auth , todos ,admin,users
-
+from fastapi import FastAPI, Request, status
+from todoApp.models import Base
+from todoApp.database import engine
+from todoApp.routers import auth, todos, admin, users
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
+from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 
-models.Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
+
+templates = Jinja2Templates(directory='todoApp/templates')
+app.mount("/static", StaticFiles(directory="todoApp/static"), name="static")
+
+@app.get("/")
+def test(request:Request):
+    return templates.TemplateResponse("home.html" , {"request" : request})
+
+@app.get("/healthy")
+def health_check():
+    return {'status': 'Healthy'}
+
+
 app.include_router(auth.router)
 app.include_router(todos.router)
 app.include_router(admin.router)
 app.include_router(users.router)
-

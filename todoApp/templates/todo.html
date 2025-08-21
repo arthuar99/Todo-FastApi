@@ -1,0 +1,195 @@
+{% extends 'layouts.html' %}
+
+{% block title %}My Todos • TodoApp{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/todo.css') }}">
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar">
+    <div class="navbar-container">
+        <a href="/todos/todo-page" class="navbar-brand">
+            <div class="logo">✓</div>
+            TodoApp
+        </a>
+        <div class="navbar-nav">
+            <a href="/todos/todo-page" class="nav-link active">My Todos</a>
+            <a href="/users/profile-page" class="nav-link">Profile</a>
+            <button onclick="logout()" class="btn btn-small btn-secondary">Logout</button>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<main class="todo-wrapper">
+    <div class="accent accent-1" aria-hidden="true"></div>
+    <div class="accent accent-2" aria-hidden="true"></div>
+
+    <div class="todo-container">
+        <header class="todo-header">
+            <div class="header-content">
+                <h1>My Todos</h1>
+                <p class="subtitle">Manage your tasks efficiently</p>
+            </div>
+            <button class="btn btn-primary" onclick="showAddForm()">+ Add Todo</button>
+        </header>
+
+        <div class="todo-content">
+            <!-- Add Todo Form (hidden by default) -->
+            <div id="addTodoForm" class="todo-form hidden">
+                <h3>Add New Todo</h3>
+                <form id="todoForm">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="title">Title</label>
+                            <input id="title" type="text" name="title" placeholder="Enter todo title" required>
+                        </div>
+                        <div class="field">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description" placeholder="Enter description"
+                                required></textarea>
+                        </div>
+                        <div class="field">
+                            <label for="priority">Priority</label>
+                            <select id="priority" name="priority" required>
+                                <option value="">Select priority</option>
+                                <option value="1">Low</option>
+                                <option value="2">Medium</option>
+                                <option value="3">High</option>
+                                <option value="4">Urgent</option>
+                                <option value="5">Critical</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="hideAddForm()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Todo</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Todos List -->
+            <div id="todosList" class="todos-list">
+                <div class="loading">Loading todos...</div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='css/js/base.js') }}"></script>
+<script>
+    function showAddForm() {
+        document.getElementById('addTodoForm').classList.remove('hidden');
+        document.getElementById('title').focus();
+    }
+
+    function hideAddForm() {
+        document.getElementById('addTodoForm').classList.add('hidden');
+        document.getElementById('todoForm').reset();
+    }
+
+    // Load todos on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        loadTodos();
+    });
+
+    async function loadTodos() {
+        try {
+            const token = getCookie('access_token');
+            if (!token) {
+                window.location.href = '/auth/login-page';
+                return;
+            }
+
+            const response = await fetch('/todos/', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const todos = await response.json();
+                displayTodos(todos);
+            } else {
+                console.error('Failed to load todos');
+            }
+        } catch (error) {
+            console.error('Error loading todos:', error);
+        }
+    }
+
+    function displayTodos(todos) {
+        const container = document.getElementById('todosList');
+
+        if (todos.length === 0) {
+            container.innerHTML = '<div class="empty-state">No todos yet. Create your first one!</div>';
+            return;
+        }
+
+        const todosHtml = todos.map(todo => `
+        <div class="todo-item ${todo.complete ? 'completed' : ''}" data-id="${todo.id}">
+            <div class="todo-content">
+                <h3 class="todo-title">${todo.title}</h3>
+                <p class="todo-description">${todo.description}</p>
+                <div class="todo-meta">
+                    <span class="priority priority-${todo.priority}">Priority ${todo.priority}</span>
+                    <span class="status ${todo.complete ? 'complete' : 'pending'}">
+                        ${todo.complete ? '✓ Complete' : '○ Pending'}
+                    </span>
+                </div>
+            </div>
+            <div class="todo-actions">
+                <a href="/todos/view/${todo.id}" class="btn btn-small">View</a>
+                <a href="/todos/edit/${todo.id}" class="btn btn-small">Edit</a>
+                <button class="btn btn-small" onclick="toggleTodo(${todo.id})">${todo.complete ? 'Mark pending' : 'Mark complete'}</button>
+                <button class="btn btn-small btn-danger" onclick="deleteTodo(${todo.id})">Delete</button>
+            </div>
+        </div>
+    `).join('');
+
+        container.innerHTML = todosHtml;
+    }
+
+    async function deleteTodo(id) {
+        if (!confirm('Are you sure you want to delete this todo?')) {
+            return;
+        }
+
+        try {
+            const token = getCookie('access_token');
+            const response = await fetch(`/todos/todo/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                loadTodos(); // Reload the todos list
+            } else {
+                alert('Failed to delete todo');
+            }
+        } catch (error) {
+            console.error('Error deleting todo:', error);
+            alert('Error deleting todo');
+        }
+    }
+
+    async function toggleTodo(id) {
+        try {
+            const token = getCookie('access_token');
+            const response = await fetch(`/todos/todo/${id}/toggle`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                loadTodos();
+            }
+        } catch (e) { console.error(e); }
+    }
+</script>
+{% endblock %}

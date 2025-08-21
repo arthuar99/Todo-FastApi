@@ -1,0 +1,176 @@
+{% extends 'layouts.html' %}
+
+{% block title %}View Todo • TodoApp{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/todo.css') }}">
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar">
+    <div class="navbar-container">
+        <a href="/todos/todo-page" class="navbar-brand">
+            <div class="logo">✓</div>
+            TodoApp
+        </a>
+        <div class="navbar-nav">
+            <a href="/todos/todo-page" class="nav-link">My Todos</a>
+            <a href="/users/profile-page" class="nav-link">Profile</a>
+            <button onclick="logout()" class="btn btn-small btn-secondary">Logout</button>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<main class="todo-wrapper">
+    <div class="accent accent-1" aria-hidden="true"></div>
+    <div class="accent accent-2" aria-hidden="true"></div>
+
+    <div class="todo-container">
+        <header class="todo-header">
+            <div class="header-content">
+                <h1>Todo Details</h1>
+                <p class="subtitle">View your task information</p>
+            </div>
+            <div class="header-actions">
+                <a href="/todos/edit/{{ todo_id }}" class="btn btn-primary">Edit Todo</a>
+                <a href="/todos/todo-page" class="btn btn-secondary">← Back to Todos</a>
+            </div>
+        </header>
+
+        <div class="todo-content">
+            <div id="todoDetails" class="todo-details">
+                <div class="loading">Loading todo details...</div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='css/js/base.js') }}"></script>
+<script>
+    const todoId = {{ todo_id }};
+
+    // Load todo data on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        loadTodoDetails();
+    });
+
+    async function loadTodoDetails() {
+        try {
+            const token = getCookie('access_token');
+            if (!token) {
+                window.location.href = '/auth/login-page';
+                return;
+            }
+
+            const response = await fetch(`/todos/todo/${todoId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const todo = await response.json();
+                displayTodoDetails(todo);
+            } else {
+                document.getElementById('todoDetails').innerHTML =
+                    '<div class="error-state">Todo not found or you don\'t have permission to view it.</div>';
+            }
+        } catch (error) {
+            console.error('Error loading todo:', error);
+            document.getElementById('todoDetails').innerHTML =
+                '<div class="error-state">Error loading todo details.</div>';
+        }
+    }
+
+    function displayTodoDetails(todo) {
+        const container = document.getElementById('todoDetails');
+
+        const todoHtml = `
+            <div class="todo-detail-card ${todo.complete ? 'completed' : ''}">
+                <div class="detail-header">
+                    <h2 class="detail-title">${todo.title}</h2>
+                    <div class="detail-status">
+                        <span class="status ${todo.complete ? 'complete' : 'pending'}">
+                            ${todo.complete ? '✓ Complete' : '○ Pending'}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="detail-content">
+                    <div class="detail-section">
+                        <h3>Description</h3>
+                        <p>${todo.description}</p>
+                    </div>
+                    
+                    <div class="detail-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Priority:</span>
+                            <span class="priority priority-${todo.priority}">Priority ${todo.priority}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Status:</span>
+                            <span class="status ${todo.complete ? 'complete' : 'pending'}">
+                                ${todo.complete ? 'Completed' : 'In Progress'}
+                            </span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Created:</span>
+                            <span>${new Date().toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-actions">
+                    <button class="btn" onclick="toggleTodo(${todo.id})">${todo.complete ? 'Mark pending' : 'Mark complete'}</button>
+                    <a href="/todos/edit/${todo.id}" class="btn btn-primary">Edit Todo</a>
+                    <button class="btn btn-danger" onclick="deleteTodo(${todo.id})">Delete Todo</button>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = todoHtml;
+    }
+
+    async function toggleTodo(id) {
+        try {
+            const token = getCookie('access_token');
+            const response = await fetch(`/todos/todo/${id}/toggle`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                loadTodoDetails();
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function deleteTodo(id) {
+        if (!confirm('Are you sure you want to delete this todo?')) {
+            return;
+        }
+
+        try {
+            const token = getCookie('access_token');
+            const response = await fetch(`/todos/todo/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                window.location.href = '/todos/todo-page';
+            } else {
+                alert('Failed to delete todo');
+            }
+        } catch (error) {
+            console.error('Error deleting todo:', error);
+            alert('Error deleting todo');
+        }
+    }
+</script>
+{% endblock %}

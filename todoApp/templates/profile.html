@@ -1,0 +1,244 @@
+{% extends 'layouts.html' %}
+
+{% block title %}Profile • TodoApp{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/todo.css') }}">
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar">
+    <div class="navbar-container">
+        <a href="/todos/todo-page" class="navbar-brand">
+            <div class="logo">✓</div>
+            TodoApp
+        </a>
+        <div class="navbar-nav">
+            <a href="/todos/todo-page" class="nav-link">My Todos</a>
+            <a href="/users/profile-page" class="nav-link active">Profile</a>
+            <button onclick="logout()" class="btn btn-small btn-secondary">Logout</button>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<main class="todo-wrapper">
+    <div class="accent accent-1" aria-hidden="true"></div>
+    <div class="accent accent-2" aria-hidden="true"></div>
+
+    <div class="todo-container">
+        <header class="todo-header">
+            <div class="header-content">
+                <h1>My Profile</h1>
+                <p class="subtitle">Manage your account settings</p>
+            </div>
+            <div class="header-actions">
+                <a href="/todos/todo-page" class="btn btn-primary">My Todos</a>
+                <button onclick="logout()" class="btn btn-secondary">Logout</button>
+            </div>
+        </header>
+
+        <div class="todo-content">
+            <div id="profileData" class="profile-section">
+                <div class="loading">Loading profile...</div>
+            </div>
+
+            <div class="profile-actions">
+                <div class="action-card">
+                    <h3>Change Password</h3>
+                    <form id="passwordForm" class="profile-form">
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="currentPassword">Current Password</label>
+                                <input id="currentPassword" type="password" name="password" required>
+                            </div>
+                            <div class="field">
+                                <label for="newPassword">New Password</label>
+                                <input id="newPassword" type="password" name="new_password" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Password</button>
+                    </form>
+                </div>
+
+                <div class="action-card">
+                    <h3>Update Contact Info</h3>
+                    <form id="contactForm" class="profile-form">
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="phoneNumber">Phone Number</label>
+                                <input id="phoneNumber" type="tel" name="phone_number"
+                                    placeholder="Enter new phone number">
+                            </div>
+                            <div class="field">
+                                <label for="address">Address</label>
+                                <input id="address" type="text" name="address" placeholder="Enter new address">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Contact Info</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='css/js/base.js') }}"></script>
+<script>
+    // Load user data on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        loadUserProfile();
+        setupFormHandlers();
+    });
+
+    async function loadUserProfile() {
+        try {
+            const token = getCookie('access_token');
+            if (!token) {
+                window.location.href = '/auth/login-page';
+                return;
+            }
+
+            const response = await fetch('/users/', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const user = await response.json();
+                displayUserProfile(user);
+            } else {
+                document.getElementById('profileData').innerHTML =
+                    '<div class="error-state">Failed to load profile data.</div>';
+            }
+        } catch (error) {
+            console.error('Error loading profile:', error);
+            document.getElementById('profileData').innerHTML =
+                '<div class="error-state">Error loading profile data.</div>';
+        }
+    }
+
+    function displayUserProfile(user) {
+        const container = document.getElementById('profileData');
+
+        const profileHtml = `
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <span>${user.first_name ? user.first_name[0].toUpperCase() : 'U'}</span>
+                    </div>
+                    <div class="profile-info">
+                        <h2>${user.first_name} ${user.last_name}</h2>
+                        <p class="user-email">${user.email}</p>
+                        <p class="user-role">Role: ${user.role}</p>
+                    </div>
+                </div>
+                
+                <div class="profile-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Username:</span>
+                        <span class="detail-value">${user.username}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Phone:</span>
+                        <span class="detail-value">${user.phone_number || 'Not set'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Address:</span>
+                        <span class="detail-value">${user.address || 'Not set'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value ${user.is_active ? 'active' : 'inactive'}">
+                            ${user.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = profileHtml;
+    }
+
+    function setupFormHandlers() {
+        // Password form handler
+        document.getElementById('passwordForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+
+            try {
+                const token = getCookie('access_token');
+                const response = await fetch('/users/password', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Password updated successfully!');
+                    document.getElementById('passwordForm').reset();
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.detail}`);
+                }
+            } catch (error) {
+                console.error('Error updating password:', error);
+                alert('Error updating password');
+            }
+        });
+
+        // Contact form handler
+        document.getElementById('contactForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const address = document.getElementById('address').value;
+
+            try {
+                const token = getCookie('access_token');
+
+                // Update phone number
+                if (phoneNumber) {
+                    await fetch(`/users/phonenumber/${phoneNumber}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                }
+
+                // Update address
+                if (address) {
+                    await fetch('/users/address/', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ address: address })
+                    });
+                }
+
+                alert('Contact information updated successfully!');
+                document.getElementById('contactForm').reset();
+                loadUserProfile(); // Reload profile data
+            } catch (error) {
+                console.error('Error updating contact info:', error);
+                alert('Error updating contact information');
+            }
+        });
+    }
+</script>
+{% endblock %}

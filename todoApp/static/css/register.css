@@ -1,0 +1,50 @@
+/* Dark modern register page */
+:root {
+  --bg: #0f172a;
+  --card: #0b1223;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --brand: #22d3ee;
+  --brand-strong: #06b6d4;
+  --ring: rgba(34, 211, 238, 0.5);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(1200px 800px at 10% -10%, rgba(34,211,238,.15), transparent), radial-gradient(1000px 700px at 110% 10%, rgba(59,130,246,.12), transparent), var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; min-height: 100vh; }
+
+.auth-wrapper { display: grid; place-items: center; min-height: 100vh; padding: 24px; position: relative; overflow: hidden; }
+.accent { position: absolute; filter: blur(60px); opacity: .25; pointer-events: none; }
+.accent-1 { width: 380px; height: 380px; border-radius: 999px; background: #22d3ee; top: -80px; left: -60px; }
+.accent-2 { width: 420px; height: 420px; border-radius: 999px; background: #3b82f6; bottom: -120px; right: -80px; }
+
+.auth-card { width: 100%; max-width: 720px; background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)) padding-box, linear-gradient(135deg, rgba(34,211,238,.35), rgba(59,130,246,.35)) border-box, var(--card); border: 1px solid transparent; border-radius: 18px; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04); backdrop-filter: blur(6px); }
+
+.auth-header { text-align: center; margin-bottom: 16px; }
+.app-logo { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; margin: 0 auto 12px; color: #012a2f; font-weight: 800; background: linear-gradient(135deg, #22d3ee, #0ea5e9); box-shadow: 0 10px 22px rgba(34,211,238,.35); }
+.auth-header h1 { margin: 0 0 4px; font-size: 1.6rem; }
+.subtitle { margin: 0; color: var(--muted); }
+
+.auth-form { margin-top: 12px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: .9rem; color: var(--muted); margin-bottom: 8px; }
+.field input { width: 100%; height: 44px; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(148,163,184,.3); outline: none; background: rgba(2,6,23,.6); color: var(--text); transition: border .15s ease, box-shadow .15s ease, background .15s ease; }
+.field input:focus { background: rgba(2,6,23,.8); border-color: var(--brand); box-shadow: 0 0 0 4px var(--ring); }
+
+.password-field { position: relative; }
+.password-toggle { position: absolute; top: 34px; right: 10px; width: 28px; height: 28px; border: none; border-radius: 8px; cursor: pointer; background: linear-gradient(135deg, #111827, #0b1223); box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
+.password-toggle::before { content: ""; display: block; width: 16px; height: 16px; margin: 6px auto; background: radial-gradient(circle at 50% 50%, #22d3ee 35%, transparent 36%), linear-gradient(transparent 45%, #22d3ee 45% 55%, transparent 55%); border-radius: 50%; opacity: .85; }
+.password-toggle.visible::before { background: linear-gradient(transparent 45%, #22d3ee 45% 55%, transparent 55%); border-radius: 2px; width: 16px; height: 2px; margin-top: 13px; }
+
+.btn { appearance: none; border: none; cursor: pointer; border-radius: 10px; height: 44px; padding: 0 14px; font-weight: 600; }
+.btn-primary { width: 100%; background: linear-gradient(135deg, var(--brand), var(--brand-strong)); color: #002a2e; box-shadow: 0 12px 24px rgba(34,211,238,.25), inset 0 1px 0 rgba(255,255,255,.35); transition: transform .08s ease, filter .15s ease, box-shadow .15s ease; }
+.btn-primary:hover { filter: brightness(1.05); }
+.btn-primary:active { transform: translateY(1px); }
+
+.auth-footer { margin-top: 16px; text-align: center; color: var(--muted); }
+.auth-footer .link { color: var(--brand); text-decoration: none; margin-left: 6px; }
+.auth-footer .link:hover { text-decoration: underline; }
+
+@media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } .auth-card { padding: 22px; } }
+
+

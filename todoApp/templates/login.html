@@ -1,0 +1,63 @@
+{% extends 'layouts.html' %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/login.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Floating accent elements -->
+<div class="accent accent-1"></div>
+<div class="accent accent-2"></div>
+<div class="accent accent-3"></div>
+
+<main class="auth-wrapper">
+    <section class="login-card" aria-label="Sign in">
+        <header class="login-header">
+            <div class="app-logo" aria-hidden="true">✓</div>
+            <h1>Welcome back</h1>
+            <p class="subtitle">Sign in to continue to TodoApp</p>
+        </header>
+
+        <form id="loginForm" class="login-form">
+            <div class="field">
+                <label for="username">Username</label>
+                <input id="username" type="text" name="username" placeholder="Enter your username"
+                    autocomplete="username" required>
+            </div>
+            <div class="field">
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password" placeholder="Enter your password"
+                    autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <span>Sign in</span>
+            </button>
+        </form>
+
+        <footer class="login-footer">
+            <span>New here?</span>
+            <a class="link" href="/auth/register-page">Create an account</a>
+            <div style="height: 16px"></div>
+            <a class="btn btn-google" href="/auth/google/login">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="22" height="22" aria-hidden="true"
+                    focusable="false">
+                    <path fill="#FFC107"
+                        d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12 s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C33.64,6.053,29.084,4,24,4C12.955,4,4,12.955,4,24 s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+                    <path fill="#FF3D00"
+                        d="M6.306,14.691l6.571,4.819C14.655,16.108,18.961,14,24,14c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657 C33.64,6.053,29.084,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+                    <path fill="#4CAF50"
+                        d="M24,44c5.166,0,9.774-1.977,13.244-5.193l-6.108-5.163C29.059,35.091,26.68,36,24,36 c-5.202,0-9.619-3.317-11.283-7.946l-6.539,5.037C9.505,39.556,16.227,44,24,44z" />
+                    <path fill="#1976D2"
+                        d="M43.611,20.083H42V20H24v8h11.303c-0.793,2.237-2.231,4.166-4.112,5.644l0.003-0.002l6.108,5.163 C36.967,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+                </svg>
+                <span>Sign in with Google</span>
+            </a>
+        </footer>
+    </section>
+</main>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='css/js/base.js') }}"></script>
+{% endblock %}
