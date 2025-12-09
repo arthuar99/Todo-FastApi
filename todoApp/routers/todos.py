@@ -1,12 +1,13 @@
+"""
+Todo routes module with optimized database queries and centralized authentication.
+"""
 from typing import Annotated
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from starlette import status
 from todoApp.models import Todos
-from todoApp.database import get_db # Assuming you updated this to yield AsyncSession
+from todoApp.database import get_db
 from todoApp.routers.auth import get_current_user
 from fastapi.templating import Jinja2Templates
 
@@ -17,7 +18,7 @@ router = APIRouter(
 
 templates = Jinja2Templates(directory="todoApp/templates")
 
-# Optimized: Centralized authentication check
+
 def get_authenticated_user(user: dict = Depends(get_current_user)):
     """Verify user is authenticated, raise 401 if not."""
     if user is None:
@@ -47,7 +48,7 @@ async def get_todo(user: user_depends, db: db_depends, todo_id: int = Path(gt=0)
     todo = (
         db.query(Todos)
         .filter(Todos.id == todo_id, Todos.owner_id == user['id'])
-        .first()
+        .one_or_none()
     )
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
@@ -75,18 +76,15 @@ async def update_todo(
     todo_model = (
         db.query(Todos)
         .filter(Todos.id == todo_id, Todos.owner_id == user['id'])
-        .first()
+        .one_or_none()
     )
     if todo_model is None:
         raise HTTPException(status_code=404, detail='Todo not found')
 
-    # Update fields
-    todo_model.title = todo_request.title
-    todo_model.description = todo_request.description
-    todo_model.priority = todo_request.priority
-    todo_model.complete = todo_request.complete
+    # Bulk update using dictionary unpacking
+    for field, value in todo_request.model_dump().items():
+        setattr(todo_model, field, value)
     
-    # Optimized: No need to call db.add() on already tracked object
     db.commit()
 
 
@@ -96,32 +94,29 @@ async def toggle_todo(user: user_depends, db: db_depends, todo_id: int = Path(gt
     todo_model = (
         db.query(Todos)
         .filter(Todos.id == todo_id, Todos.owner_id == user['id'])
-        .first()
+        .one_or_none()
     )
     if todo_model is None:
         raise HTTPException(status_code=404, detail='Todo not found')
     
     todo_model.complete = not todo_model.complete
     db.commit()
-    # Optimized: Return without refresh since we only need these two fields
     return {"id": todo_model.id, "complete": todo_model.complete}
 
 
 @router.delete("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_todo(user: user_depends, db: db_depends, todo_id: int = Path(gt=0)):
     """Delete a todo."""
-    # Optimized: Combined query and delete check
     todo_model = (
         db.query(Todos)
         .filter(Todos.id == todo_id, Todos.owner_id == user['id'])
-        .first()
+        .one_or_none()
     )
     if todo_model is None:
         raise HTTPException(status_code=404, detail="Todo not found")
 
     db.delete(todo_model)
     db.commit()
-    # Note: 204 No Content should not return a body
 
 
 # Frontend template routes
