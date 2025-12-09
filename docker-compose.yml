@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: todo_api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:test1234!@postgres:5432/TodoAppDatabase
+    depends_on:
+      - postgres
+    restart: always
+
+  postgres:
+    image: postgres:15
+    container_name: todo_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test1234!
+      POSTGRES_DB: TodoAppDatabase
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres_data:
