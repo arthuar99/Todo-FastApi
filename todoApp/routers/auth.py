@@ -1,3 +1,7 @@
+"""
+Authentication router for the Todo FastAPI application.
+Provides endpoints for user registration, login, and Google OAuth integration.
+"""
 from datetime import timedelta, datetime, timezone
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
